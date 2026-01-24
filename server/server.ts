@@ -22,7 +22,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 /**
- * Stripe webhook MUST come before express.json()
+ * Stripe webhook (RAW body required)
+ * MUST come before express.json()
  */
 app.post(
   "/api/stripe",
@@ -31,15 +32,15 @@ app.post(
 );
 
 /**
- * JSON parser (after webhook)
+ * JSON parser
  */
 app.use(express.json({ limit: "50mb" }));
 
 /**
- * Better Auth Routes
- * Handles all auth endpoints
+ * ✅ Better Auth Routes (FINAL & CORRECT)
+ * DO NOT use wildcards
  */
-app.all("/api/auth/:path(*)", toNodeHandler(auth));
+app.use("/api/auth", toNodeHandler(auth));
 
 /**
  * Health Check
@@ -58,5 +59,5 @@ app.use("/api/project", projectRouter);
  * Start Server
  */
 app.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });
