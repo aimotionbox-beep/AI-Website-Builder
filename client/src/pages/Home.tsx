@@ -66,11 +66,11 @@ const Home = () => {
         </form>
 
         <div className="flex flex-wrap items-center justify-center gap-16 md:gap-20 mx-auto mt-16">
-          <img className="max-w-28 md:max-w-32" src="https://saasly.prebuiltui.com/assets/companies-logo/framer.svg" alt="" />
-          <img className="max-w-28 md:max-w-32" src="https://saasly.prebuiltui.com/assets/companies-logo/huawei.svg" alt="" />
-          <img className="max-w-28 md:max-w-32" src="https://saasly.prebuiltui.com/assets/companies-logo/instagram.svg" alt="" />
-          <img className="max-w-28 md:max-w-32" src="https://saasly.prebuiltui.com/assets/companies-logo/microsoft.svg" alt="" />
-          <img className="max-w-28 md:max-w-32" src="https://saasly.prebuiltui.com/assets/companies-logo/walmart.svg" alt="" />
+          <img className="max-w-28 md:max-w-32" src="https://placehold.co/128x40?text=Framer" alt="Framer" />
+          <img className="max-w-28 md:max-w-32" src="https://placehold.co/128x40?text=Huawei" alt="Huawei" />
+          <img className="max-w-28 md:max-w-32" src="https://placehold.co/128x40?text=Instagram" alt="Instagram" />
+          <img className="max-w-28 md:max-w-32" src="https://placehold.co/128x40?text=Microsoft" alt="Microsoft" />
+          <img className="max-w-28 md:max-w-32" src="https://placehold.co/128x40?text=Walmart" alt="Walmart" />
         </div>
       </section>
 
