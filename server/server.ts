@@ -37,13 +37,9 @@ app.use(express.json({ limit: "50mb" }));
 
 /**
  * Better Auth Routes
- * Handles:
- * /api/auth/sign-in
- * /api/auth/sign-up
- * /api/auth/get-session
- * /api/auth/sign-out
+ * Handles all auth endpoints
  */
-app.all("/api/auth/*", toNodeHandler(auth));
+app.all("/api/auth/:path(*)", toNodeHandler(auth));
 
 /**
  * Health Check
