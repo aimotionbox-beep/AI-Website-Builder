@@ -92,7 +92,7 @@ export const makeRevision = async (req: Request, res: Response) => {
 
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'kwaipilot/kat-coder-pro:free',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
