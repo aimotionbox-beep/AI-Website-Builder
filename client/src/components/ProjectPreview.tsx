@@ -3,6 +3,7 @@ import type { Project } from '../types';
 import { iframeScript } from '../assets/assets';
 import EditorPanel from './EditorPanel';
 import LoaderSteps from './LoaderSteps';
+import { SandpackProvider, SandpackLayout, SandpackCodeEditor, SandpackPreview } from "@codesandbox/sandpack-react";
 
 interface ProjectPreviewProps {
     project: Project;
@@ -57,11 +58,31 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
     // Check if code is JSON (Full Stack Structure)
     let isJson = false;
     let projectStructure = null;
+    let sandpackFiles: any = {};
+    let sandpackTemplate: any = 'react';
+
     try {
         if(project.current_code) {
             projectStructure = JSON.parse(project.current_code);
             if (projectStructure && projectStructure.files && Array.isArray(projectStructure.files)) {
                 isJson = true;
+                sandpackTemplate = projectStructure.template || 'react';
+                
+                // Construct Sandpack files
+                projectStructure.files.forEach((f: any) => {
+                    let path = f.path;
+                    // Normalize path: strip client/ prefix if present to make it root for preview
+                    if (path.startsWith('client/')) path = path.replace('client/', '');
+                    if (path.startsWith('/client/')) path = path.replace('/client/', '');
+
+                    // Skip server files for client-side preview
+                    if (path.startsWith('server/') || path.startsWith('/server/')) return;
+
+                    // Ensure leading slash
+                    if (!path.startsWith('/')) path = '/' + path;
+
+                    sandpackFiles[path] = f.content;
+                });
             }
         }
     } catch (e) {
@@ -104,22 +125,32 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
     <div className='relative h-full bg-gray-900 flex-1 rounded-xl overflow-hidden max-sm:ml-2'>
       {project.current_code ? (
         isJson ? (
-            <div className="h-full w-full overflow-auto p-4 text-white font-mono text-sm">
-                <div className="mb-4">
-                    <h2 className="text-xl font-bold mb-2">Project Generated: {projectStructure.stack || 'Full Stack'}</h2>
-                    <p className="text-gray-400 mb-4">This is a full-stack project. You can browse the files below or download the project to run it.</p>
-                </div>
-                <div className="space-y-4">
-                    {projectStructure.files.map((file: any, index: number) => (
-                        <div key={index} className="border border-gray-700 rounded-lg p-3 bg-gray-800">
-                            <h3 className="text-indigo-400 font-semibold mb-2">{file.path}</h3>
-                            <pre className="overflow-x-auto bg-gray-950 p-2 rounded text-xs text-gray-300">
-                                <code>{file.content.slice(0, 300)}...</code>
-                            </pre>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <SandpackProvider 
+                template={sandpackTemplate} 
+                files={sandpackFiles} 
+                theme="dark"
+                options={{
+                    externalResources: ["https://cdn.tailwindcss.com"]
+                }}
+                className="h-full w-full"
+            >
+                <SandpackLayout className="h-full w-full !rounded-none !border-none">
+                    <SandpackCodeEditor 
+                        showTabs 
+                        closableTabs 
+                        showLineNumbers 
+                        showInlineErrors 
+                        wrapContent 
+                        style={{height: '100%'}} 
+                    />
+                    <SandpackPreview 
+                        showNavigator 
+                        showRefreshButton 
+                        showOpenInCodeSandbox={false} 
+                        style={{height: '100%'}} 
+                    />
+                </SandpackLayout>
+            </SandpackProvider>
         ) : (
         <>
         <iframe 

@@ -107,27 +107,41 @@ export const createUserProject = async (req, res) => {
                     You are an expert full-stack developer. Create a complete, production-ready application based on this request: "${enhancedPrompt}"
 
                     CRITICAL REQUIREMENTS:
-                    1.  **Full Stack & Flexibility**: Do NOT restrict yourself to static HTML unless explicitly requested. You MUST generate a full frontend and backend codebase using the most appropriate modern technology stack (e.g., React, Next.js, Vue, Node/Express, etc.) for the requirements. If the user specified a stack, use it. If not, analyze the requirements and choose the best fit.
+                    1.  **Full Stack & Flexibility**: Do NOT restrict yourself to static HTML unless explicitly requested. You MUST generate a full frontend and backend codebase using the most appropriate modern technology stack (e.g., React, Next.js, Vue, Node/Express, etc.) for the requirements.
                     2.  **Output Format**: You MUST return a single valid JSON object containing the file structure.
                         The JSON schema must be:
                         \`\`\`json
                         {
                           "type": "project-structure",
-                          "stack": "e.g., react-node, nextjs, html-css",
+                          "template": "react", // Options: "react", "react-ts", "vue", "vue-ts", "vanilla", "vanilla-ts", "angular", "svelte", "solid", "node"
                           "files": [
                             {
-                              "path": "path/to/file.ext",
+                              "path": "path/to/file.ext", // e.g., "/App.js", "/public/index.html", "/server/index.js"
                               "content": "file content here"
                             }
                           ]
                         }
                         \`\`\`
-                    3.  **Content**:
+                    3.  **Preview & Runtime Compatibility**:
+                        - The generated code will be previewed in a **client-side sandbox** (Sandpack).
+                        - **Frontend**: Ensure the frontend is fully functional in the preview. Use standard imports (e.g., \`import React from 'react'\`).
+                        - **Backend**: If a backend is required (e.g., Node/Express), generate the full backend code in a \`server/\` directory for the user to download.
+                        - **Data Fetching**: Since the backend cannot run in the client-side preview, **you MUST mock API calls in the frontend** so the preview works immediately.
+                          - Example:
+                            \`\`\`javascript
+                            // Real API call (commented out)
+                            // const res = await fetch('/api/data');
+                            // const data = await res.json();
+                            
+                            // Mock data for preview
+                            const data = [{ id: 1, name: "Sample Data" }];
+                            \`\`\`
+                    4.  **Content**:
                         - Include ALL necessary configuration files (package.json, tsconfig.json, .env.example, etc.).
                         - Include a README.md with clear setup and running instructions.
                         - Ensure the code is production-ready, clean, and well-commented.
-                        - For styling, use Tailwind CSS if applicable, or the standard for the chosen stack.
-                    4.  **No Markdown/Explanations**: Return ONLY the raw JSON string. Do not wrap it in markdown code blocks or add any text before/after.
+                        - For styling, use Tailwind CSS (via CDN or standard config) if applicable.
+                    5.  **Output Format**: Return the valid JSON object wrapped in a markdown code block (\`\`\`json ... \`\`\`).
                     `
                 },
                 {
@@ -151,12 +165,13 @@ export const createUserProject = async (req, res) => {
             });
             return;
         }
+        // Extract JSON from markdown if present
+        const jsonMatch = code.match(/```json\n?([\s\S]*?)\n?```/);
+        const cleanCode = jsonMatch ? jsonMatch[1].trim() : code.trim();
         // Create Version for the project
         const version = await prisma.version.create({
             data: {
-                code: code.replace(/```[a-z]*\n?/gi, '')
-                    .replace(/```$/g, '')
-                    .trim(),
+                code: cleanCode,
                 description: 'Initial version',
                 projectId: project.id
             }
@@ -171,9 +186,7 @@ export const createUserProject = async (req, res) => {
         await prisma.websiteProject.update({
             where: { id: project.id },
             data: {
-                current_code: code.replace(/```[a-z]*\n?/gi, '')
-                    .replace(/```$/g, '')
-                    .trim(),
+                current_code: cleanCode,
                 current_version_index: version.id
             }
         });

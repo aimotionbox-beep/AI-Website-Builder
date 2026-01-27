@@ -86,11 +86,12 @@ export const makeRevision = async (req, res) => {
 
                     CRITICAL REQUIREMENTS:
                     1.  **Full Stack & Flexibility**: Do NOT restrict yourself to static HTML unless explicitly requested. Maintain the existing stack if possible, or migrate/update as requested.
-                    2.  **Output Format**: You MUST return a single valid JSON object containing the complete file structure (or just the changed files if doing a partial update, but for now return ALL files to ensure consistency).
+                    2.  **Output Format**: You MUST return a single valid JSON object containing the complete file structure.
                         The JSON schema must be:
                         \`\`\`json
                         {
                           "type": "project-structure",
+                          "template": "react", // Options: "react", "react-ts", "vue", "vue-ts", "vanilla", "vanilla-ts", "angular", "svelte", "solid", "node"
                           "stack": "e.g., react-node, nextjs, html-css",
                           "files": [
                             {
@@ -100,10 +101,24 @@ export const makeRevision = async (req, res) => {
                           ]
                         }
                         \`\`\`
-                    3.  **Content**:
+                    3.  **Preview & Runtime Compatibility**:
+                        - The generated code will be previewed in a **client-side sandbox** (Sandpack).
+                        - **Frontend**: Ensure the frontend is fully functional in the preview. Use standard imports.
+                        - **Backend**: If a backend is required (e.g., Node/Express), generate the full backend code in a \`server/\` directory for the user to download.
+                        - **Data Fetching**: Since the backend cannot run in the client-side preview, **you MUST mock API calls in the frontend** so the preview works immediately.
+                          - Example:
+                            \`\`\`javascript
+                            // Real API call (commented out)
+                            // const res = await fetch('/api/data');
+                            // const data = await res.json();
+                            
+                            // Mock data for preview
+                            const data = [{ id: 1, name: "Sample Data" }];
+                            \`\`\`
+                    4.  **Content**:
                         - Include ALL necessary configuration files.
                         - Ensure the code is production-ready.
-                    4.  **No Markdown/Explanations**: Return ONLY the raw JSON string.
+                    5.  **Output Format**: Return the valid JSON object wrapped in a markdown code block (\`\`\`json ... \`\`\`).
                     `
                 },
                 {
@@ -128,11 +143,12 @@ export const makeRevision = async (req, res) => {
             });
             return;
         }
+        // Extract JSON from markdown if present
+        const jsonMatch = code.match(/```json\n?([\s\S]*?)\n?```/);
+        const cleanCode = jsonMatch ? jsonMatch[1].trim() : code.trim();
         const version = await prisma.version.create({
             data: {
-                code: code.replace(/```[a-z]*\n?/gi, '')
-                    .replace(/```$/g, '')
-                    .trim(),
+                code: cleanCode,
                 description: 'changes made',
                 projectId
             }
@@ -147,9 +163,7 @@ export const makeRevision = async (req, res) => {
         await prisma.websiteProject.update({
             where: { id: projectId },
             data: {
-                current_code: code.replace(/```[a-z]*\n?/gi, '')
-                    .replace(/```$/g, '')
-                    .trim(),
+                current_code: cleanCode,
                 current_version_index: version.id
             }
         });
