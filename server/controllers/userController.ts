@@ -120,31 +120,32 @@ export const createUserProject = async (req: Request, res: Response) => {
             messages: [
                 {
                     role: 'system',
-                     content: `
-                     You are an expert web developer. Create a complete, production-ready, single-page website based on this request: "${enhancedPrompt}"
+                    content: `
+                    You are an expert full-stack developer. Create a complete, production-ready application based on this request: "${enhancedPrompt}"
 
                     CRITICAL REQUIREMENTS:
-                    - You MUST output valid HTML ONLY. 
-                    - Use Tailwind CSS for ALL styling
-                    - Include this EXACT script in the <head>: <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-                    - Use Tailwind utility classes extensively for styling, animations, and responsiveness
-                    - Make it fully functional and interactive with JavaScript in <script> tag before closing </body>
-                    - Use modern, beautiful design with great UX using Tailwind classes
-                    - Make it responsive using Tailwind responsive classes (sm:, md:, lg:, xl:)
-                    - Use Tailwind animations and transitions (animate-*, transition-*)
-                    - Include all necessary meta tags
-                    - Use Google Fonts CDN if needed for custom fonts
-                    - Use placeholder images from https://placehold.co/600x400
-                    - Use Tailwind gradient classes for beautiful backgrounds
-                    - Make sure all buttons, cards, and components use Tailwind styling
-
-                    CRITICAL HARD RULES:
-                    1. You MUST put ALL output ONLY into message.content.
-                    2. You MUST NOT place anything in "reasoning", "analysis", "reasoning_details", or any hidden fields.
-                    3. You MUST NOT include internal thoughts, explanations, analysis, comments, or markdown.
-                    4. Do NOT include markdown, explanations, notes, or code fences.
-
-                    The HTML should be complete and ready to render as-is with Tailwind CSS.`
+                    1.  **Full Stack & Flexibility**: Do NOT restrict yourself to static HTML unless explicitly requested. You MUST generate a full frontend and backend codebase using the most appropriate modern technology stack (e.g., React, Next.js, Vue, Node/Express, etc.) for the requirements. If the user specified a stack, use it. If not, analyze the requirements and choose the best fit.
+                    2.  **Output Format**: You MUST return a single valid JSON object containing the file structure.
+                        The JSON schema must be:
+                        \`\`\`json
+                        {
+                          "type": "project-structure",
+                          "stack": "e.g., react-node, nextjs, html-css",
+                          "files": [
+                            {
+                              "path": "path/to/file.ext",
+                              "content": "file content here"
+                            }
+                          ]
+                        }
+                        \`\`\`
+                    3.  **Content**:
+                        - Include ALL necessary configuration files (package.json, tsconfig.json, .env.example, etc.).
+                        - Include a README.md with clear setup and running instructions.
+                        - Ensure the code is production-ready, clean, and well-commented.
+                        - For styling, use Tailwind CSS if applicable, or the standard for the chosen stack.
+                    4.  **No Markdown/Explanations**: Return ONLY the raw JSON string. Do not wrap it in markdown code blocks or add any text before/after.
+                    `
                 },
                 {
                     role: 'user',

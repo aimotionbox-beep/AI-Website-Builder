@@ -29,7 +29,10 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
     useImperativeHandle(ref, ()=>({
         getCode: ()=>{
             const doc = iframeRef.current?.contentDocument;
-            if(!doc) return undefined;
+            // If we are in file view mode (no iframe document), return the original code (JSON or HTML)
+            if(!doc) {
+                return project.current_code;
+            }
 
              // 1. Remove our selection class / attributes / outline from all elements
              doc.querySelectorAll('.ai-selected-element,[data-ai-selected]').forEach((el)=>{
@@ -50,6 +53,20 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
             return html;
         }
     }))
+
+    // Check if code is JSON (Full Stack Structure)
+    let isJson = false;
+    let projectStructure = null;
+    try {
+        if(project.current_code) {
+            projectStructure = JSON.parse(project.current_code);
+            if (projectStructure && projectStructure.files && Array.isArray(projectStructure.files)) {
+                isJson = true;
+            }
+        }
+    } catch (e) {
+        // Not JSON
+    }
 
     useEffect(()=>{
         const handleMessage = (event: MessageEvent)=>{
@@ -86,6 +103,24 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
   return (
     <div className='relative h-full bg-gray-900 flex-1 rounded-xl overflow-hidden max-sm:ml-2'>
       {project.current_code ? (
+        isJson ? (
+            <div className="h-full w-full overflow-auto p-4 text-white font-mono text-sm">
+                <div className="mb-4">
+                    <h2 className="text-xl font-bold mb-2">Project Generated: {projectStructure.stack || 'Full Stack'}</h2>
+                    <p className="text-gray-400 mb-4">This is a full-stack project. You can browse the files below or download the project to run it.</p>
+                </div>
+                <div className="space-y-4">
+                    {projectStructure.files.map((file: any, index: number) => (
+                        <div key={index} className="border border-gray-700 rounded-lg p-3 bg-gray-800">
+                            <h3 className="text-indigo-400 font-semibold mb-2">{file.path}</h3>
+                            <pre className="overflow-x-auto bg-gray-950 p-2 rounded text-xs text-gray-300">
+                                <code>{file.content.slice(0, 300)}...</code>
+                            </pre>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ) : (
         <>
         <iframe 
         ref={iframeRef}
@@ -102,6 +137,7 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
             }}/>
         )}
         </>
+        )
       ): isGenerating && (
         <LoaderSteps />
       )}

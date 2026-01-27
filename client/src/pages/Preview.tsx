@@ -17,19 +17,28 @@ const Preview = () => {
 
   const fetchCode = async () => {
    try {
-    const { data } = await api.get(`/api/project/preview/${projectId}`)
-    setCode(data.project.current_code)
-    if(versionId){
-      data.project.versions.forEach((version: Version)=>{
-        if(version.id === versionId){
-          setCode(version.code)
-        }
-      })
+    const { data } = await api.get(`/api/user/project/${projectId}`)
+    const projectData = data.project;
+    
+    if(!projectData) {
+      toast.error("Project not found");
+      setLoading(false);
+      return;
+    }
+
+    setCode(projectData.current_code || '')
+    
+    if(versionId && projectData.versions){
+      const version = projectData.versions.find((v: Version) => v.id === versionId);
+      if(version){
+        setCode(version.code)
+      }
     }
     setLoading(false)
    } catch (error: any) {
     toast.error(error?.response?.data?.message || error.message);
     console.log(error);
+    setLoading(false);
    }
   }
 
@@ -39,10 +48,11 @@ const Preview = () => {
     }
   },[session?.user])
 
-  if(loading){
+  if(loading || (!code && !loading)){
     return (
-      <div className='flex items-center justify-center h-screen'>
+      <div className='flex flex-col items-center justify-center h-screen gap-4'>
         <Loader2Icon className='size-7 animate-spin text-indigo-200' />
+        {!code && !loading && <p className="text-gray-400">Generating preview...</p>}
       </div>
     )
   }
