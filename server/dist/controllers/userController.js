@@ -59,7 +59,7 @@ export const createUserProject = async (req, res) => {
         res.json({ projectId: project.id });
         // Enhance user prompt
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'google/kwaipilot/kat-coder-pro:free',
+            model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
             messages: [
                 {
                     role: 'system',
@@ -99,7 +99,7 @@ export const createUserProject = async (req, res) => {
         });
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'kwaipilot/kat-coder-pro:free',
+            model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
             messages: [
                 {
                     role: 'system',
