@@ -52,8 +52,8 @@ const Projects = () => {
     }
     };
 
-    // download code ( index.html )
-  const downloadCode = ()=>{
+    // download code ( ZIP )
+  const downloadCode = async ()=>{
     const code = previewRef.current?.getCode() || project?.current_code;
     if(!code){
       if(isGenerating){
@@ -61,12 +61,36 @@ const Projects = () => {
       }
       return
     }
-    const element = document.createElement('a');
-    const file = new Blob([code], {type: "text/html"});
-    element.href = URL.createObjectURL(file)
-    element.download = "index.html";
-    document.body.appendChild(element)
-    element.click();
+
+    try {
+      const response = await api.post('/api/project/download', {
+        code,
+        projectName: project?.name
+      }, {
+        responseType: 'blob' // Important: response as blob
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      // Get filename from Content-Disposition header if available, else default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'project.zip';
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (fileNameMatch && fileNameMatch.length === 2)
+            filename = fileNameMatch[1];
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+       toast.error(error?.response?.data?.message || "Failed to download project");
+       console.log(error);
+    }
   }
 
   const togglePublish = async () => {

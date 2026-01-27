@@ -1,9 +1,10 @@
 import express from 'express';
 import { protect } from '../middlewares/auth.js';
-import { deleteProject, getProjectById, getProjectPreview, getPublishedProjects, makeRevision, rollbackToVersion, saveProjectCode } from '../controllers/projectController.js';
+import { deleteProject, downloadProject, getProjectById, getProjectPreview, getPublishedProjects, makeRevision, rollbackToVersion, saveProjectCode } from '../controllers/projectController.js';
 
 const projectRouter = express.Router();
 
+projectRouter.post('/download', protect, downloadProject)
 projectRouter.post('/revision/:projectId', protect, makeRevision)
 projectRouter.put('/save/:projectId', protect, saveProjectCode)
 projectRouter.get('/rollback/:projectId/:versionId', protect, rollbackToVersion)
