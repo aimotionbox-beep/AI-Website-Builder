@@ -116,7 +116,11 @@ export const createUserProject = async (req: Request, res: Response) => {
 
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
+<<<<<<< HEAD
             model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+=======
+            model: 'openai/gpt-3.5-turbo',
+>>>>>>> 0ec138fc30de3e156778abd3b9a954611700f474
             messages: [
                 {
                     role: 'system',
