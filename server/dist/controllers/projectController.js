@@ -38,7 +38,7 @@ export const makeRevision = async (req, res) => {
         });
         // Enhance user prompt
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+            model: 'openai/gpt-5.2-codex',
             messages: [
                 {
                     role: 'system',
@@ -76,7 +76,7 @@ export const makeRevision = async (req, res) => {
         });
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+            model: 'openai/gpt-5.2-codex',
             messages: [
                 {
                     role: 'system',
