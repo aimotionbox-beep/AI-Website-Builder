@@ -91,6 +91,18 @@ export const makeRevision = async (req: Request, res: Response) => {
             }
         })
 
+        // Extract HTML from current code (JSON or string)
+        let currentHtml = currentProject.current_code;
+        try {
+            const json = JSON.parse(currentHtml);
+            if(json.files) {
+                 const indexFile = json.files.find((f:any) => f.path === '/index.html' || f.path === 'index.html');
+                 if(indexFile) currentHtml = indexFile.content;
+            }
+        } catch(e) {
+            // It's raw HTML, use as is
+        }
+
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
             model: 'openai/gpt-5.2-codex',
@@ -99,7 +111,7 @@ export const makeRevision = async (req: Request, res: Response) => {
                     role: 'system',
                     content: `
                     You are an expert web developer. 
-
+                    
                     CRITICAL REQUIREMENTS:
                     - Return ONLY the complete updated HTML code with the requested changes.
                     - Use Tailwind CSS for ALL styling (NO custom CSS).
@@ -107,20 +119,20 @@ export const makeRevision = async (req: Request, res: Response) => {
                     - Include all JavaScript in <script> tags before closing </body>
                     - Make sure it's a complete, standalone HTML document with Tailwind CSS
                     - Return the HTML Code Only, nothing else
-
+                    
                     Apply the requested changes while maintaining the Tailwind CSS styling approach.`
                 },
                 {
                     role: 'user',
                     content: `
-                    Here is the current website code: "${currentProject.current_code}" The user wants this change: "${enhancedPrompt}"`
+                    Here is the current website code: "${currentHtml}" The user wants this change: "${enhancedPrompt}"`
                 }
             ]
         })
 
-        const code = codeGenerationResponse.choices[0].message.content || '';
+        const generatedHtml = codeGenerationResponse.choices[0].message.content || '';
 
-        if(!code){
+        if(!generatedHtml){
              await prisma.conversation.create({
             data: {
                 role: 'assistant',
@@ -135,11 +147,23 @@ export const makeRevision = async (req: Request, res: Response) => {
         return;
         }
 
+        // Wrap HTML in JSON structure for Sandpack
+        const projectStructure = {
+            template: 'static',
+            files: [
+                {
+                    path: '/index.html',
+                    content: generatedHtml.replace(/```[a-z]*\n?/gi, '')
+                        .replace(/```$/g, '')
+                        .trim()
+                }
+            ]
+        };
+        const code = JSON.stringify(projectStructure);
+
         const version = await prisma.version.create({
             data: {
-                code: code.replace(/```[a-z]*\n?/gi, '')
-                .replace(/```$/g, '')
-                .trim(),
+                code,
                 description: 'changes made',
                 projectId
             }
@@ -156,9 +180,7 @@ export const makeRevision = async (req: Request, res: Response) => {
         await prisma.websiteProject.update({
             where: {id: projectId},
             data: {
-                current_code: code.replace(/```[a-z]*\n?/gi, '')
-                .replace(/```$/g, '')
-                .trim(),
+                current_code: code,
                 current_version_index: version.id
             }
         })

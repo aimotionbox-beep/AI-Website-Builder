@@ -153,9 +153,9 @@ export const createUserProject = async (req: Request, res: Response) => {
             ]
         })
 
-        const code = codeGenerationResponse.choices[0].message.content || '';
+        const generatedHtml = codeGenerationResponse.choices[0].message.content || '';
 
-        if(!code){
+        if(!generatedHtml){
              await prisma.conversation.create({
             data: {
                 role: 'assistant',
@@ -170,12 +170,24 @@ export const createUserProject = async (req: Request, res: Response) => {
         return;
         }
 
+        // Wrap HTML in JSON structure for Sandpack
+        const projectStructure = {
+            template: 'static',
+            files: [
+                {
+                    path: '/index.html',
+                    content: generatedHtml.replace(/```[a-z]*\n?/gi, '')
+                        .replace(/```$/g, '')
+                        .trim()
+                }
+            ]
+        };
+        const code = JSON.stringify(projectStructure);
+
         // Create Version for the project
         const version = await prisma.version.create({
             data: {
-                code: code.replace(/```[a-z]*\n?/gi, '')
-                .replace(/```$/g, '')
-                .trim(),
+                code,
                 description: 'Initial version',
                 projectId: project.id
             }
@@ -192,9 +204,7 @@ export const createUserProject = async (req: Request, res: Response) => {
         await prisma.websiteProject.update({
             where: {id: project.id},
             data: {
-                current_code: code.replace(/```[a-z]*\n?/gi, '')
-                .replace(/```$/g, '')
-                .trim(),
+                current_code: code,
                 current_version_index: version.id
             }
         })
