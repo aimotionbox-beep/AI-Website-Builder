@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "prestart": "npm run build",
     "start": "node dist/server.js",
     "dev": "tsx server.ts",
     "postinstall": "node node_modules/prisma/build/index.js generate"
