@@ -72,7 +72,7 @@ export const createUserProject = async (req: Request, res: Response) => {
 
         // Enhance user prompt
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-3.5-turbo',
+            model: 'openai/gpt-5.2-codex',
             messages: [
                 {
                     role: 'system',
@@ -116,50 +116,35 @@ export const createUserProject = async (req: Request, res: Response) => {
 
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-3.5-turbo',
+            model: 'openai/gpt-5.2-codex',
             messages: [
                 {
                     role: 'system',
-                    content: `
-                    You are an expert full-stack developer. Create a complete, production-ready application based on this request: "${enhancedPrompt}"
+                     content: `
+                     You are an expert web developer. Create a complete, production-ready, single-page website based on this request: "${enhancedPrompt}"
 
                     CRITICAL REQUIREMENTS:
-                    1.  **Full Stack & Flexibility**: Do NOT restrict yourself to static HTML unless explicitly requested. You MUST generate a full frontend and backend codebase using the most appropriate modern technology stack (e.g., React, Next.js, Vue, Node/Express, etc.) for the requirements.
-                    2.  **Output Format**: You MUST return a single valid JSON object containing the file structure.
-                        The JSON schema must be:
-                        \`\`\`json
-                        {
-                          "type": "project-structure",
-                          "template": "react", // Options: "react", "react-ts", "vue", "vue-ts", "vanilla", "vanilla-ts", "angular", "svelte", "solid", "node"
-                          "files": [
-                            {
-                              "path": "path/to/file.ext", // e.g., "/App.js", "/public/index.html", "/server/index.js"
-                              "content": "file content here"
-                            }
-                          ]
-                        }
-                        \`\`\`
-                    3.  **Preview & Runtime Compatibility**:
-                        - The generated code will be previewed in a **client-side sandbox** (Sandpack).
-                        - **Frontend**: Ensure the frontend is fully functional in the preview. Use standard imports (e.g., \`import React from 'react'\`).
-                        - **Backend**: If a backend is required (e.g., Node/Express), generate the full backend code in a \`server/\` directory for the user to download.
-                        - **Data Fetching**: Since the backend cannot run in the client-side preview, **you MUST mock API calls in the frontend** so the preview works immediately.
-                          - Example:
-                            \`\`\`javascript
-                            // Real API call (commented out)
-                            // const res = await fetch('/api/data');
-                            // const data = await res.json();
-                            
-                            // Mock data for preview
-                            const data = [{ id: 1, name: "Sample Data" }];
-                            \`\`\`
-                    4.  **Content**:
-                        - Include ALL necessary configuration files (package.json, tsconfig.json, .env.example, etc.).
-                        - Include a README.md with clear setup and running instructions.
-                        - Ensure the code is production-ready, clean, and well-commented.
-                        - For styling, use Tailwind CSS (via CDN or standard config) if applicable.
-                    5.  **Output Format**: Return the valid JSON object wrapped in a markdown code block (\`\`\`json ... \`\`\`).
-                    `
+                    - You MUST output valid HTML ONLY. 
+                    - Use Tailwind CSS for ALL styling
+                    - Include this EXACT script in the <head>: <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+                    - Use Tailwind utility classes extensively for styling, animations, and responsiveness
+                    - Make it fully functional and interactive with JavaScript in <script> tag before closing </body>
+                    - Use modern, beautiful design with great UX using Tailwind classes
+                    - Make it responsive using Tailwind responsive classes (sm:, md:, lg:, xl:)
+                    - Use Tailwind animations and transitions (animate-*, transition-*)
+                    - Include all necessary meta tags
+                    - Use Google Fonts CDN if needed for custom fonts
+                    - Use placeholder images from https://placehold.co/600x400
+                    - Use Tailwind gradient classes for beautiful backgrounds
+                    - Make sure all buttons, cards, and components use Tailwind styling
+
+                    CRITICAL HARD RULES:
+                    1. You MUST put ALL output ONLY into message.content.
+                    2. You MUST NOT place anything in "reasoning", "analysis", "reasoning_details", or any hidden fields.
+                    3. You MUST NOT include internal thoughts, explanations, analysis, comments, or markdown.
+                    4. Do NOT include markdown, explanations, notes, or code fences.
+
+                    The HTML should be complete and ready to render as-is with Tailwind CSS.`
                 },
                 {
                     role: 'user',
@@ -185,14 +170,12 @@ export const createUserProject = async (req: Request, res: Response) => {
         return;
         }
 
-        // Extract JSON from markdown if present
-        const jsonMatch = code.match(/```json\n?([\s\S]*?)\n?```/);
-        const cleanCode = jsonMatch ? jsonMatch[1].trim() : code.trim();
-
         // Create Version for the project
         const version = await prisma.version.create({
             data: {
-                code: cleanCode,
+                code: code.replace(/```[a-z]*\n?/gi, '')
+                .replace(/```$/g, '')
+                .trim(),
                 description: 'Initial version',
                 projectId: project.id
             }
@@ -209,7 +192,9 @@ export const createUserProject = async (req: Request, res: Response) => {
         await prisma.websiteProject.update({
             where: {id: project.id},
             data: {
-                current_code: cleanCode,
+                current_code: code.replace(/```[a-z]*\n?/gi, '')
+                .replace(/```$/g, '')
+                .trim(),
                 current_version_index: version.id
             }
         })
@@ -220,9 +205,7 @@ export const createUserProject = async (req: Request, res: Response) => {
             data: {credits: {increment: 5}}
         })
         console.log(error);
-        if (!res.headersSent) {
-            res.status(500).json({ message: error.message });
-        }
+        res.status(500).json({ message: error.message });
     }
 }
 
