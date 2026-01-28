@@ -37,9 +37,10 @@ export const makeRevision = async (req, res) => {
             where: { id: userId },
             data: { credits: { decrement: 5 } }
         });
-        // Enhance user prompt
+        // 🔹 PROMPT ENHANCEMENT
+        // ===============================
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
@@ -75,9 +76,10 @@ export const makeRevision = async (req, res) => {
                 projectId
             }
         });
-        // Generate website code
+        // 🔹 CODE GENERATION
+        // ===============================
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',

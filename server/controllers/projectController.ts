@@ -50,9 +50,10 @@ export const makeRevision = async (req: Request, res: Response) => {
             data: {credits: {decrement: 5}}
         })
 
-        // Enhance user prompt
+        // 🔹 PROMPT ENHANCEMENT
+        // ===============================
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
@@ -91,9 +92,10 @@ export const makeRevision = async (req: Request, res: Response) => {
             }
         })
 
-        // Generate website code
+        // 🔹 CODE GENERATION
+        // ===============================
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
@@ -385,7 +387,7 @@ export const downloadProject = async (req: Request, res: Response) => {
             zlib: { level: 9 } // Sets the compression level.
         });
 
-        archive.on('error', function(err) {
+        archive.on('error', function(err: any) {
             res.status(500).send({message: err.message});
         });
 

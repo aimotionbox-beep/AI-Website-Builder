@@ -59,7 +59,7 @@ export const createUserProject = async (req, res) => {
         res.json({ projectId: project.id });
         // Enhance user prompt
         const promptEnhanceResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
@@ -99,7 +99,7 @@ export const createUserProject = async (req, res) => {
         });
         // Generate website code
         const codeGenerationResponse = await openai.chat.completions.create({
-            model: 'openai/gpt-5.2-codex',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
