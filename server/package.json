@@ -4,8 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "prestart": "npm run build",
+    "build": "esbuild server.ts --bundle --platform=node --outfile=dist/server.js --packages=external --format=esm",
     "start": "node dist/server.js",
     "dev": "tsx server.ts",
     "postinstall": "node node_modules/prisma/build/index.js generate"
@@ -35,6 +34,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.15.6",
+    "esbuild": "^0.27.2",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2"
   }
