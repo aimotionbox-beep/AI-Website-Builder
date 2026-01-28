@@ -61,9 +61,26 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
     let sandpackFiles: any = {};
     let sandpackTemplate: any = 'react';
 
+    const tryParseJson = (str: string) => {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            try {
+                // Try to extract JSON from markdown if present
+                const match = str.match(/```json\n?([\s\S]*?)\n?```/);
+                if (match) return JSON.parse(match[1]);
+                // Try removing markdown without regex if above failed
+                const clean = str.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(clean);
+            } catch (e2) {
+                return null;
+            }
+        }
+    }
+
     try {
         if(project.current_code) {
-            projectStructure = JSON.parse(project.current_code);
+            projectStructure = tryParseJson(project.current_code);
             if (projectStructure && projectStructure.files && Array.isArray(projectStructure.files)) {
                 isJson = true;
                 sandpackTemplate = projectStructure.template || 'react';
@@ -71,12 +88,15 @@ const ProjectPreview = forwardRef<ProjectPreviewRef, ProjectPreviewProps>(({proj
                 // Construct Sandpack files
                 projectStructure.files.forEach((f: any) => {
                     let path = f.path;
-                    // Normalize path: strip client/ prefix if present to make it root for preview
+                    // Normalize path: strip client/ or frontend/ prefix
                     if (path.startsWith('client/')) path = path.replace('client/', '');
                     if (path.startsWith('/client/')) path = path.replace('/client/', '');
+                    if (path.startsWith('frontend/')) path = path.replace('frontend/', '');
+                    if (path.startsWith('/frontend/')) path = path.replace('/frontend/', '');
 
                     // Skip server files for client-side preview
                     if (path.startsWith('server/') || path.startsWith('/server/')) return;
+                    if (path.startsWith('backend/') || path.startsWith('/backend/')) return;
 
                     // Ensure leading slash
                     if (!path.startsWith('/')) path = '/' + path;

@@ -397,19 +397,37 @@ export const downloadProject = async (req: Request, res: Response) => {
         let isJson = false;
         let projectStructure = null;
         try {
+            // Try standard parse
             projectStructure = JSON.parse(code);
-            if (projectStructure && projectStructure.files && Array.isArray(projectStructure.files)) {
-                isJson = true;
-            }
         } catch (e) {
-            // Not JSON, treat as string (HTML)
+            try {
+                 // Try to extract JSON from markdown if present
+                 const match = code.match(/```json\n?([\s\S]*?)\n?```/);
+                 if (match) {
+                     projectStructure = JSON.parse(match[1]);
+                 } else {
+                     // Try removing markdown without regex if above failed
+                     const clean = code.replace(/```json/g, '').replace(/```/g, '').trim();
+                     projectStructure = JSON.parse(clean);
+                 }
+            } catch (e2) {
+                // Not JSON, treat as string (HTML)
+            }
+        }
+
+        if (projectStructure && projectStructure.files && Array.isArray(projectStructure.files)) {
+            isJson = true;
         }
 
         if (isJson && projectStructure) {
             // Full Stack JSON Structure
             projectStructure.files.forEach((file: any) => {
-                if (file.path && file.content) {
-                    archive.append(file.content, { name: file.path });
+                let path = file.path;
+                // Remove leading slash if present to avoid absolute path issues in zip
+                if (path.startsWith('/')) path = path.substring(1);
+                
+                if (path && file.content) {
+                    archive.append(file.content, { name: path });
                 }
             });
         } else {
